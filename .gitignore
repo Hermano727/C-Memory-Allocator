@@ -1,0 +1,4 @@
+.vscode/
+**.o
+vmtest
+libvm.so
