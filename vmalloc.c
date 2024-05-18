@@ -39,20 +39,17 @@ void *vmalloc(size_t size)
     size_t best_fit_sz = BLKSZ(best_fit);
     if (best_fit_sz > total_size + sizeof(struct block_header)) {
             struct block_header *new_block = (struct block_header *)((char *)best_fit + total_size);
-            new_block->size_status = best_fit_sz - total_size;
-            new_block->size_status &= ~VM_BUSY;
-            new_block->size_status |= VM_PREVBUSY;
-
+            new_block->size_status = (best_fit_sz - total_size) | (best_fit->size_status & VM_PREVBUSY);
             struct block_footer *new_footer = (struct block_footer *)((char *)new_block + BLKSZ(new_block) - sizeof(struct block_footer));
             new_footer->size = BLKSZ(new_block);
 
             // Update best fit block to busy
-            best_fit->size_status = total_size | VM_BUSY;
-            best_fit->size_status |= (best_fit->size_status & VM_PREVBUSY);
+            best_fit->size_status = total_size | VM_BUSY | (best_fit->size_status & VM_PREVBUSY);
+            struct block_footer *best_fit_footer = (struct block_footer *)((char *)best_fit + total_size - sizeof(struct block_footer));
+            best_fit_footer->size = total_size;
     } else {
         // If best_fit_sz is the same as total_size, just allocate the whole block
-        best_fit->size_status |= VM_BUSY;
-        best_fit->size_status |= (best_fit->size_status & VM_PREVBUSY);
+        best_fit->size_status = best_fit_sz | VM_BUSY | (best_fit->size_status & VM_PREVBUSY);
     }
 
     struct block_header *next_block = (struct block_header *)((char *)best_fit + BLKSZ(best_fit));
