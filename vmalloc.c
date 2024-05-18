@@ -35,6 +35,13 @@ void *vmalloc(size_t size)
         return NULL;
     }
 
+    // Allocate the block
+    size_t best_fit_sz = BLKSZ(best_fit);
+    if (best_fit_sz > total_size + sizeof(struct block_header)) {
+            struct block_header *new_block = (struct block_header *)((char *)best_fit + total_size);
+            new_block->size_status = best_fit_sz - total_size;
+    }
+
     //Return the pointer to the payload
     return (void *)((char *)best_fit + sizeof(struct block_header));
 }
