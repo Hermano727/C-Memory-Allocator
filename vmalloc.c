@@ -3,7 +3,7 @@
 
 void *vmalloc(size_t size)
 {
-    if (size < 0 ) {
+    if (size <= 0 ) {
         return NULL; //no allocation made
     }  
 
