@@ -40,6 +40,8 @@ void *vmalloc(size_t size)
     if (best_fit_sz > total_size + sizeof(struct block_header)) {
             struct block_header *new_block = (struct block_header *)((char *)best_fit + total_size);
             new_block->size_status = (best_fit_sz - total_size) | (best_fit->size_status & VM_PREVBUSY);
+
+            // Create footer for new block
             struct block_footer *new_footer = (struct block_footer *)((char *)new_block + BLKSZ(new_block) - sizeof(struct block_footer));
             new_footer->size = BLKSZ(new_block);
 
