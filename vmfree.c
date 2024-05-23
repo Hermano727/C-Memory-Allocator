@@ -10,5 +10,18 @@
  */
 void vmfree(void *ptr)
 {
-    // TODO
+   if (ptr == NULL) {
+      return;
+   }
+   
+   struct block_header *current = (struct block_header *)((char *)ptr - sizeof(struct block_header));
+
+   // If block header indicates the block is already free, do nothing
+   if (!(current->size_status & VM_BUSY)) {
+           return;
+   }
+
+   // Unset status bit to 0
+   current->size_status &= ~VM_BUSY;
+   
 }
