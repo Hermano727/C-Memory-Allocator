@@ -35,15 +35,16 @@
 #define VM_BUSY 0x1
 #define VM_PREVBUSY 0x2
 
-#define BLKSZ(b) ((b)->size_status & VM_BLKSZMASK)
-#define ROUND_UP(N, S) ((((N) + (S)-1) / (S)) * (S))
+#define BLKSZ(b) ((b)->size_status &VM_BLKSZMASK)
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define BLKALIGN 16
 
 /**
  * This structure serves as the block header for each heap block.
  * It is always 4 bytes long.
  */
-struct block_header {
+struct block_header
+{
     /**
      * The size of a block is always a multiple of 16. This means that
      * the last four bits are always zero. We use the last two bits of
@@ -66,7 +67,8 @@ struct block_header {
     size_t size_status;
 };
 
-struct block_footer {
+struct block_footer
+{
     size_t size;
 };
 

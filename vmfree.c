@@ -10,42 +10,48 @@
  */
 void vmfree(void *ptr)
 {
-   if (ptr == NULL) {
-      return;
-   }
-   
-   struct block_header *curr = (struct block_header *)((char *)ptr - sizeof(struct block_header));
+    if (ptr == NULL) {
+        return;
+    }
 
-   // If block header indicates the block is already free, do nothing
-   if (!(curr->size_status & VM_BUSY)) {
-           return;
-   }
+    struct block_header *curr =
+        (struct block_header *)((char *)ptr - sizeof(struct block_header));
 
-   // Unset status bit to 0
-   curr->size_status &= ~VM_BUSY;
-    
-   struct block_footer *current_footer = (struct block_footer *)((char *)curr + BLKSZ(curr) - sizeof(struct block_footer));
-   current_footer->size = BLKSZ(curr);
+    // If block header indicates the block is already free, do nothing
+    if (!(curr->size_status & VM_BUSY)) {
+        return;
+    }
 
-   struct block_header *next_block = (struct block_header *)((char *)curr + BLKSZ(curr));
-   if (next_block->size_status != VM_ENDMARK) {
-           next_block->size_status &= ~VM_PREVBUSY;
+    // Unset status bit to 0
+    curr->size_status &= ~VM_BUSY;
+
+    struct block_footer *current_footer =
+        (struct block_footer *)((char *)curr + BLKSZ(curr) -
+                                sizeof(struct block_footer));
+    current_footer->size = BLKSZ(curr);
+
+    struct block_header *next_block =
+        (struct block_header *)((char *)curr + BLKSZ(curr));
+    if (next_block->size_status != VM_ENDMARK) {
+        next_block->size_status &= ~VM_PREVBUSY;
 
         // Coalesce with next block if it is also free
         if (!(next_block->size_status & VM_BUSY)) {
-                curr->size_status += BLKSZ(next_block);
-                struct block_footer *next_footer = (struct block_footer *)((char *)next_block + BLKSZ(next_block) - sizeof(struct block_footer));
-                current_footer = next_footer;
-                current_footer->size = BLKSZ(curr);
+            curr->size_status += BLKSZ(next_block);
+            struct block_footer *next_footer =
+                (struct block_footer *)((char *)next_block + BLKSZ(next_block) -
+                                        sizeof(struct block_footer));
+            current_footer = next_footer;
+            current_footer->size = BLKSZ(curr);
         }
-   }
+    }
 
-   if (!(curr->size_status & VM_PREVBUSY)) {
-           struct block_footer *prev_footer = (struct block_footer *)((char *)curr - sizeof(struct block_footer));
-           struct block_header *prev_block = (struct block_header *)((char *)curr - prev_footer->size);
-           prev_block->size_status += BLKSZ(curr);
-           current_footer->size = BLKSZ(prev_block);
-   }
-
-    
+    if (!(curr->size_status & VM_PREVBUSY)) {
+        struct block_footer *prev_footer =
+            (struct block_footer *)((char *)curr - sizeof(struct block_footer));
+        struct block_header *prev_block =
+            (struct block_header *)((char *)curr - prev_footer->size);
+        prev_block->size_status += BLKSZ(curr);
+        current_footer->size = BLKSZ(prev_block);
+    }
 }

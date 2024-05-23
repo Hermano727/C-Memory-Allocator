@@ -7,7 +7,7 @@
 
 void vminfo()
 {
-    static const char *blkstats[] = {"FREE", "BUSY"};
+    static const char *blkstats[] = { "FREE", "BUSY" };
 
     struct block_header *block = heapstart;
     int blockid = 0;
