@@ -34,15 +34,17 @@ void *vmalloc(size_t size)
         return NULL;
     }
 
-    // Allocate the block
+    // Get the best fit block size
     size_t best_fit_sz = BLKSZ(best_fit);
+
+    // Best fit is larger than required size, so split the block
     if (best_fit_sz > total_size + sizeof(struct block_header)) {
         struct block_header *new_block =
             (struct block_header *)((char *)best_fit + total_size);
         new_block->size_status =
             (best_fit_sz - total_size) | (best_fit->size_status & VM_PREVBUSY);
 
-        // Create footer for new block
+        // Create footer for new block. Place at the end of the new block 
         struct block_footer *new_footer =
             (struct block_footer *)((char *)new_block + BLKSZ(new_block) -
                                     sizeof(struct block_footer));
@@ -56,12 +58,12 @@ void *vmalloc(size_t size)
                                     sizeof(struct block_footer));
         best_fit_footer->size = total_size;
     } else {
-        // If best_fit_sz is the same as total_size, just allocate the whole
-        // block
+        // No splitting is neccessary if block size is equal or block is not large enough to split
         best_fit->size_status =
             best_fit_sz | VM_BUSY | (best_fit->size_status & VM_PREVBUSY);
     }
 
+    // Set the next block's prev block status as busy
     struct block_header *next_block =
         (struct block_header *)((char *)best_fit + BLKSZ(best_fit));
     if (next_block->size_status != VM_ENDMARK) {

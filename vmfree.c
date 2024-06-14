@@ -14,6 +14,7 @@ void vmfree(void *ptr)
         return;
     }
 
+    // Find starting address of the block header
     struct block_header *curr =
         (struct block_header *)((char *)ptr - sizeof(struct block_header));
 
@@ -22,20 +23,25 @@ void vmfree(void *ptr)
         return;
     }
 
-    // Unset status bit to 0
+    // Unset status bit to 0. Mark the block as free.
     curr->size_status &= ~VM_BUSY;
 
+    // Update footer for current block. Will help for coalescing prev blocks
     struct block_footer *current_footer =
         (struct block_footer *)((char *)curr + BLKSZ(curr) -
                                 sizeof(struct block_footer));
     current_footer->size = BLKSZ(curr);
 
+    // Locate next block
     struct block_header *next_block =
         (struct block_header *)((char *)curr + BLKSZ(curr));
+
+    // If the next block is not the end marker, set prev block
+    // status to free 
     if (next_block->size_status != VM_ENDMARK) {
         next_block->size_status &= ~VM_PREVBUSY;
 
-        // Coalesce with next block if it is also free
+        // Coalesce curr block with next block if it is also free
         if (!(next_block->size_status & VM_BUSY)) {
             curr->size_status += BLKSZ(next_block);
             struct block_footer *next_footer =
@@ -46,6 +52,7 @@ void vmfree(void *ptr)
         }
     }
 
+    // If prev block is free, curr block is coalesced with prev block
     if (!(curr->size_status & VM_PREVBUSY)) {
         struct block_footer *prev_footer =
             (struct block_footer *)((char *)curr - sizeof(struct block_footer));
